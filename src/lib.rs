@@ -1,10 +1,10 @@
 //! Simple library for quickly fetching a list of URLs from a webpage.
-//! 
+//!
 //! # Example
 //! ```rust,no_run
 //! extern crate url_scraper;
 //! use url_scraper::UrlScraper;
-//! 
+//!
 //! let scraper = UrlScraper::new("http://phoronix.com/").unwrap();
 //! for (text, url) in scraper.into_iter() {
 //!     println!("{}: {}", text, url);
@@ -15,7 +15,7 @@ extern crate reqwest;
 extern crate scraper;
 
 use reqwest::{Client, Url};
-use scraper::{Html, html::Select, Selector};
+use scraper::{html::Select, Html, Selector};
 use std::fmt;
 
 /// Stores the HTML document in memory.
@@ -27,16 +27,16 @@ pub struct UrlScraper {
 
 impl UrlScraper {
     /// Constructs a new scraper from a given URL.
-    pub fn new(url: &str) -> Result<Self, Error> {
+    pub async fn new(url: &str) -> Result<Self, Error> {
         let client = Client::new();
-        Self::new_with_client(url, &client)
+        Self::new_with_client(url, &client).await
     }
 
     /// Use an existing `reqwest::Client` to make a request.
-    pub fn new_with_client(url: &str, client: &Client) -> Result<Self, Error> {
+    pub async fn new_with_client(url: &str, client: &Client) -> Result<Self, Error> {
         let url = Url::parse(url)?;
-        let mut resp = client.get(url.clone()).send()?;
-        let html = resp.text()?;
+        let resp = client.get(url.clone()).send().await?;
+        let html = resp.text().await?;
 
         Ok(Self {
             url,
@@ -46,7 +46,7 @@ impl UrlScraper {
     }
 
     /// In case the HTML has already been fetched in advance, this can be used to parse from it directly.
-    pub fn new_with_html(url: &str, html: &str) -> Result<Self, Error> {
+    pub async fn new_with_html(url: &str, html: &str) -> Result<Self, Error> {
         Ok(Self {
             url: Url::parse(url)?,
             html: Html::parse_document(html),
@@ -55,10 +55,10 @@ impl UrlScraper {
     }
 
     /// Fetch the URLs using an iterator.
-    pub fn into_iter<'a>(&'a self) -> UrlIter<'a, 'a> {
+    pub async fn into_iter<'a>(&'a self) -> UrlIter<'a, 'a> {
         UrlIter {
             url: &self.url,
-            data: self.html.select(&self.selector)
+            data: self.html.select(&self.selector),
         }
     }
 }
@@ -66,7 +66,7 @@ impl UrlScraper {
 /// An Iterator that returns `(String, Url)` pairs per iteration.
 pub struct UrlIter<'a, 'b> {
     url: &'a Url,
-    data: Select<'a, 'b>
+    data: Select<'a, 'b>,
 }
 
 impl<'a, 'b> Iterator for UrlIter<'a, 'b> {
@@ -75,7 +75,7 @@ impl<'a, 'b> Iterator for UrlIter<'a, 'b> {
     fn next(&mut self) -> Option<Self::Item> {
         for element in &mut self.data {
             if let Some(url) = element.value().attr("href") {
-                if ! url.starts_with('?') {
+                if !url.starts_with('?') {
                     if let Ok(url) = self.url.join(url) {
                         return Some((element.inner_html(), url));
                     }
@@ -89,8 +89,8 @@ impl<'a, 'b> Iterator for UrlIter<'a, 'b> {
 
 #[derive(Debug)]
 pub enum Error {
-    UrlParsing { why: reqwest::UrlError },
-    Request { why: reqwest::Error }
+    UrlParsing { why: url::ParseError },
+    Request { why: reqwest::Error },
 }
 
 impl fmt::Display for Error {
@@ -103,8 +103,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl From<reqwest::UrlError> for Error {
-    fn from(why: reqwest::UrlError) -> Error {
+impl From<url::ParseError> for Error {
+    fn from(why: url::ParseError) -> Error {
         Error::UrlParsing { why }
     }
 }
