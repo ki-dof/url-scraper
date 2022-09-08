@@ -5,8 +5,8 @@
 //! extern crate url_scraper;
 //! use url_scraper::UrlScraper;
 //!
-//! let scraper = UrlScraper::new("http://phoronix.com/").unwrap();
-//! for (text, url) in scraper.into_iter() {
+//! let scraper = UrlScraper::new("http://phoronix.com/").await.unwrap();
+//! for (text, url) in scraper.into_iter().await {
 //!     println!("{}: {}", text, url);
 //! }
 //!```
