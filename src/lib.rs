@@ -55,7 +55,7 @@ impl UrlScraper {
     }
 
     /// Fetch the URLs using an iterator.
-    pub async fn into_iter<'a>(&'a self) -> UrlIter<'a, 'a> {
+    pub async fn into_iter(&self) -> UrlIter {
         UrlIter {
             url: &self.url,
             data: self.html.select(&self.selector),
