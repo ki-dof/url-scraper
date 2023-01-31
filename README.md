@@ -10,11 +10,11 @@ use url_scraper::UrlScraper;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    let directory = "http://phoronix.com/";
+    let directory = "https://phoronix.com/";
 
     let scraper = UrlScraper::new(directory).await.unwrap();
     for (text, url) in scraper.into_iter().await {
-        println!("{}: {}", text, url);
+        println!("{text}: {url}");
     }
 }
 ```
