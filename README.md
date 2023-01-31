@@ -8,11 +8,12 @@ Rust crate for scraping URLs from HTML pages.
 extern crate url_scraper;
 use url_scraper::UrlScraper;
 
-fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     let directory = "http://phoronix.com/";
 
-    let scraper = UrlScraper::new(directory).unwrap();
-    for (text, url) in scraper.into_iter() {
+    let scraper = UrlScraper::new(directory).await.unwrap();
+    for (text, url) in scraper.into_iter().await {
         println!("{}: {}", text, url);
     }
 }
