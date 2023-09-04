@@ -5,9 +5,11 @@
 //! extern crate url_scraper;
 //! use url_scraper::UrlScraper;
 //!
+//! async {
 //! let scraper = UrlScraper::new("http://phoronix.com/").await.unwrap();
 //! for (text, url) in scraper.into_iter().await {
 //!     println!("{}: {}", text, url);
+//!     }
 //! }
 //!```
 
